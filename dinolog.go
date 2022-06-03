@@ -8,51 +8,55 @@ import (
 )
 
 type DlogEntry struct {
-	Title string `json:"title"`
-	Text  string `json:"text"`
+	Slug  string `json:"slug"`  //Unique Identifer of Log entry
+	Title string `json:"title"` //Title (Optional)
+	Text  string `json:"text"`  //Body
+	Size  uint64 `json:"size"`  //Size of Text Body
 }
 
 type Dlog struct {
 	Name  string      `json:"name"`
-	Host  string      `json:"host"`
 	Uname string      `json:"uname"`
 	Posts []DlogEntry `json:"entries"`
 }
 
-func (p *DlogEntry) formatEntry() string {
-    var hasTitle string = "0"
-    if len(p.Title) > 1 { hasTitle = "1" }
-    return fmt.Sprintf("E %s\r\n\n%s\r\n\n%s\r\n\n" , hasTitle , p.Title, p.Text)
+func NewEntry(title, text, slug string) DlogEntry {
+	return DlogEntry{
+		Slug:  slug,
+		Title: title,
+		Text:  text,
+		Size:  uint64(len(text)),
+	}
 
 }
 
-func (p *Dlog) formatDlog() string{
-    
-    var hasName string = "N"
-    var hasHost string = "H"
-    var hasUname string = "U"
-    var hasPosts string = "P"
-    if len(p.Name) > 1 { hasName+="1" }
-    if len(p.Host) > 1 { hasHost+= "1" }
+func (p *DlogEntry) formatEntry() string {
+	var hasTitle string = "0"
+	if len(p.Title) > 1 {
+		hasTitle = "1"
+	}
+	return fmt.Sprintf("E %s\r\n\n%s\r\n\n%s\r\n\n", hasTitle, p.Title, p.Text)
 
-    if len(p.Uname) > 1 { hasUname+= "1" }
+}
 
-    if len(p.Posts) > 1 { hasPosts+= fmt.Sprintf("%d" , len(p.Posts)) }
-    
-    bStatus := fmt.Sprintf("D %d %d\r\n\n" , 0 , 1)
-    bHeader := fmt.Sprintf("DLOG %s %s %s\r\n\n%s\r\n\n" , hasName , hasHost , hasUname , hasPosts)
-    bReturn := fmt.Sprintf("%s%s" , bStatus , bHeader)
-    
-    //var bEntries []string
+func (l *Dlog) InsertNewEntry(entry *DlogEntry) {
+	l.Posts = append(l.Posts, *entry)
+}
 
-    for _,j := range p.Posts{
-       //bEntries[i]=j.formatEntry()
-       bReturn += j.formatEntry()
-    }
+func (p *Dlog) formatDlog() string {
 
-    
-    
-    return bReturn
+	bStatus := fmt.Sprintf("D~%d~%d\r\n", 01, len(p.Posts))
+	bStyled := "=======MANGO========"
+	bReturn := fmt.Sprintf("%s\r\n", bStatus)
+	bReturn += bStyled
+	//var bEntries []string
+
+	for _, j := range p.Posts {
+		//bEntries[i]=j.formatEntry()
+		bReturn += j.formatEntry()
+	}
+
+	return bReturn
 
 }
 
@@ -60,29 +64,20 @@ func getPosts() []byte {
 
 	var myposts [2]DlogEntry
 
-	myposts[0] = DlogEntry{
-		Title: "Hello world",
-		Text:  "Yuhuuu....",
-	}
+	myposts[0] = NewEntry("Hello world", "my first post", "1")
 
-	myposts[1] = DlogEntry{
-		Title: "my post",
-		Text:  "Mew mew",
-	}
+	myposts[1] = NewEntry("Bye world", "my last post", "2")
 
 	mylog := Dlog{
-		Name:  "MyLog",
-		Host:  "localhost",
+		Name:  "MANGO",
 		Uname: "palash",
-		Posts: myposts[:],
 	}
+	mylog.InsertNewEntry(&myposts[0])
+	mylog.InsertNewEntry(&myposts[1])
 	fmt.Println(mylog)
 	//myjson, err := json.Marshal(&mylog)
-    
-    
-    //myjson := "\n[POST]\n"
 
-
+	//myjson := "\n[POST]\n"
 
 	//fmt.Println("start->")
 	//fmt.Println(err, string(myjson))
@@ -107,11 +102,11 @@ func handleCon(c net.Conn) {
 		}
 		//fmt.Println(string(rawData))
 		tmp := strings.TrimSpace(string(rawData))
-        request := strings.Split(tmp , " ")
-        
-        fmt.Println(request)
-        
-        if err != nil {
+		request := strings.Split(tmp, " ")
+
+		fmt.Println(request)
+
+		if err != nil {
 			fmt.Println(err)
 		}
 
