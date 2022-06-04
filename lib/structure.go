@@ -1,7 +1,7 @@
 package lib
 
 import (
-    "fmt"
+	"fmt"
 )
 
 type DlogEntry struct {
@@ -16,8 +16,6 @@ type Dlog struct {
 	Uname string      `json:"uname"`
 	Posts []DlogEntry `json:"entries"`
 }
-
-
 
 func NewEntry(title, text, slug string) DlogEntry {
 	return DlogEntry{
@@ -38,7 +36,7 @@ STATUS_CODES["NOTFOUND"] = 13
 */
 
 func (p *DlogEntry) FormatEntry() string {
-	return fmt.Sprintf("E~%d~%s\r\n\n%s\r\n\n%s\r\n\n", p.Size , p.Slug, p.Title, p.Text)
+	return fmt.Sprintf("E~%d~%s\r\n\n%s\r\n\n%s\r\n\n", p.Size, p.Slug, p.Title, p.Text)
 
 }
 
@@ -47,10 +45,10 @@ func (l *Dlog) InsertNewEntry(entry *DlogEntry) {
 }
 
 func (p *Dlog) FormatDlog() string {
-    
+
 	bStatus := fmt.Sprintf("D~%d~%d\r\n", 10, len(p.Posts))
-    bStatus += fmt.Sprintf("name~%s\r\n" , p.Name)
-    bStatus += fmt.Sprintf("uname~%s\r\n" , p.Uname)
+	bStatus += fmt.Sprintf("name~%s\r\n", p.Name)
+	bStatus += fmt.Sprintf("uname~%s\r\n", p.Uname)
 	bReturn := fmt.Sprintf("%s\r\n", bStatus)
 
 	for _, j := range p.Posts {
@@ -60,5 +58,3 @@ func (p *Dlog) FormatDlog() string {
 	return bReturn
 
 }
-
-

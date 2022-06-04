@@ -9,10 +9,6 @@ import (
 	"github.com/bauripalash/dinolog/lib"
 )
 
-
-
-
-
 func handleCon(c net.Conn) {
 
 	fmt.Printf("hello from %s\n", c.RemoteAddr().String())
@@ -37,7 +33,7 @@ func handleCon(c net.Conn) {
 			fmt.Println(err)
 		}
 
-		if request[0]=="+out" {
+		if request[0] == "+out" {
 			break
 		}
 
@@ -49,18 +45,17 @@ func handleCon(c net.Conn) {
 	}
 	c.Close()
 
-
 }
 
 func main() {
-    lib.CreateDatabase()
+	lib.CreateDatabase()
 	x := true
 
 	if x {
 		var PORT int = 2001
 		var ADDRESS string = fmt.Sprintf("127.0.0.1:%d", PORT)
 		l, err := net.Listen("tcp4", ADDRESS)
-        fmt.Println("Starting server on 127.0.0.1:2001")
+		fmt.Println("Starting server on 127.0.0.1:2001")
 		if err != nil {
 			fmt.Println(err)
 			return
