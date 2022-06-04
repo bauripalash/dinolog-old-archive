@@ -8,12 +8,12 @@
 ## Specification
 ### Request:
     
-<Me> : I want to read blogs of Mango Man
-<MangoManServer> : Sure, Which one?
-<Me> : Not sure! Show the list of every entry. `DD~mangoman~ALL`
-<MangoManServer> : Okay, Here you go...
-<Me> : Too much.. Too much.. Show me the last 2 entries `DD~mangoman~L2`
-<MangoManServer> : As you wish...
+* Me> : I want to read blogs of Mango Man
+* MangoManServer> : Sure, Which one?
+* Me> : Not sure! Show the list of every entry. `DD~mangoman~ALL`
+* MangoManServer> : Okay, Here you go...
+* Me> : Too much.. Too much.. Show me the last 2 entries `DD~mangoman~L2`
+* MangoManServer> : As you wish...
 
 ```
 DD<SEPARATOR><UNAME><SEPARATOR>C<COMMAND>
