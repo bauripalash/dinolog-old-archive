@@ -1,4 +1,4 @@
-# Dinolog Protocol
+# 🦕 Dinolog Protocol
 
 ### Utterly simplified and lightweight blogging protocol
 
