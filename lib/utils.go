@@ -12,8 +12,8 @@ func GetPosts() []byte {
 		Uname: "palash",
 	}
 
-	CreateNewLog(&mylog)
-	getCon().Close()
+	//CreateNewLog(&mylog)
+	//getCon().Close()
 
 	mylog.InsertNewEntry(&myposts[0])
 	mylog.InsertNewEntry(&myposts[1])

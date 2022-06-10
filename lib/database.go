@@ -1,59 +1,88 @@
 package lib
 
 import (
-	"database/sql"
-	"fmt"
 	"log"
+	"os"
+	"strings"
 
-	_ "github.com/mattn/go-sqlite3"
+	"gopkg.in/ini.v1"
 )
 
-const create_sql string = `CREATE TABLE IF NOT EXISTS  logs  (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        uname TEXT,
-        ecount INTEGER
-    );`
-
-const dbname string = "./mydb.db"
-
-func getCon() *sql.DB {
-
-	db, err := sql.Open("sqlite3", dbname)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return db
+type Config struct{
+    
+    pathname string;
+    configobject ini.File;    
 
 }
 
-func CreateDatabase() {
-
-	db, err := sql.Open("sqlite3", dbname)
-
-	if err != nil {
-		fmt.Println("CREATE DB ERROR ->")
-		log.Fatalln(err)
-	}
-
-	if _, err := db.Exec(create_sql); err != nil {
-		fmt.Println("CREATE DB EXEC ERROR =>")
-		log.Fatalln(err.Error())
-	}
+func doesConfigExist(f string) bool{
+    fileinfo , err := os.Stat(f)
+    
+    if os.IsNotExist(err){
+        log.Fatalf("Config file can not be found!")
+    }else if fileinfo.Size() == 0{
+        log.Fatalf("Empty config file")
+    }
+    return true;
 
 }
 
-func CreateNewLog(dlog *Dlog) {
+func OpenConfig(filename string) Config{
+    
+    doesConfigExist(filename)
 
-	db := getCon()
+    rawconfig, err := ini.Load(filename)
 
-	raw_sql, err := db.Prepare("INSERT INTO logs(name,uname,ecount) VALUES(?,?,?)")
+    if err != nil{
+        log.Fatalf(err.Error())
+    }
 
-	if err != nil {
-		fmt.Println("CREATE LOG ERROR->")
-		log.Fatalln(err)
-	}
+    return Config{
+        pathname : filename,
+        configobject : *rawconfig,
+    }
 
-	raw_sql.Exec(dlog.Name, dlog.Uname, len(dlog.Posts))
+}
 
+func (c *Config) CheckIfSiteExists(sitename string) bool{
+   if !c.configobject.HasSection("configuration"){
+       log.Fatalf("Configuration section does not exist in config file") 
+   }
+
+   if !c.configobject.Section("configuration").HasKey("available_sites"){
+        log.Fatalf("Can not find available_sites configuration")
+   }
+
+   sitesraw := c.configobject.Section("configuration").Key("available_sites").Value()
+   sites := strings.Split(sitesraw , ",")
+
+   for _,s := range sites{
+    if strings.TrimSpace(s) == sitename{
+        return true
+    }
+   }
+   return false
+}
+
+func (c *Config) GetSitePath(sitename string) string{
+    if c.configobject.HasSection(sitename){
+        if c.configobject.Section(sitename).HasKey("root"){
+            return c.configobject.Section(sitename).Key("root").Value()
+        }else{
+            log.Fatalf("Site configuration has no root specified")
+        }
+    }else{
+        log.Fatalf("Config has no configuration for that site")
+    }
+    return ""
+}
+
+func (c *Config) SitePathExists(sitename string) bool{
+    sitepath := c.GetSitePath(sitename)
+    _, err := os.Stat(sitepath)
+
+    if os.IsNotExist(err){
+        return false
+    }
+    return true
 }
