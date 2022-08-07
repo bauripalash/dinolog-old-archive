@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -65,6 +66,7 @@ func (c *Config) CheckIfSiteExists(sitename string) bool{
 }
 
 func (c *Config) GetSitePath(sitename string) string{
+    fmt.Println(sitename)
     if c.configobject.HasSection(sitename){
         if c.configobject.Section(sitename).HasKey("root"){
             return c.configobject.Section(sitename).Key("root").Value()
@@ -86,3 +88,5 @@ func (c *Config) SitePathExists(sitename string) bool{
     }
     return true
 }
+
+

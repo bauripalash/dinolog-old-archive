@@ -5,19 +5,20 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/bauripalash/dinolog/lib"
-    log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func init() {
-   log.SetLevel(log.InfoLevel)
-   log.SetOutput(os.Stdout)
+	log.SetLevel(log.InfoLevel)
+	log.SetOutput(os.Stdout)
 }
 
 func handleCon(c net.Conn) {
-    cf := lib.OpenConfig("server.ini")
+	cf := lib.OpenConfig("server.ini")
 	fmt.Printf("hello from %s\n", c.RemoteAddr().String())
 
 	for {
@@ -40,28 +41,46 @@ func handleCon(c net.Conn) {
 		}
 
 		if request[0] == "+out" {
-            log.Info("Client Quit Request" , c.RemoteAddr().String())
+            log.Info("Client Quit Request : ", c.RemoteAddr().String())
 			break
 		}
 
 		if request[0] == "+posts" {
-            if len(request) == 2{
-                site_name := request[1]
-                log.Info("Sitename : " , site_name)
-                if cf.CheckIfSiteExists(site_name){
-                   nw.Write([]byte(cf.GetSitePath(site_name) + "\n"))
-                   nw.Flush()
-                }
+			if len(request) == 2 {
+				site_name := request[1]
+				log.Info("REQ Site: ", site_name)
+				//log.Info("Dummy example")
+				if cf.CheckIfSiteExists(site_name) {
+					//nw.Write([]byte(cf.GetSitePath(site_name) + "\n"))
+					//nw.Write([]byte(strconv.FormatBool(cf.SitePathExists(site_name)) + "\n"))
+                    site_conf,_ := lib.GetSiteConfig(cf , site_name)
+                    site_post_dir,noerr := site_conf.GetSiteContentDir()
+                    log.Warn("NoError => " + strconv.FormatBool(noerr))
+                    log.Info(site_post_dir) 
+                    if noerr{
+                        files,_ := os.ReadDir(site_post_dir)
+                            for _,file  := range files{
+                                nw.Write([]byte(file.Name() + "\n"))
+                            }
+                    }
+                    
+				} else {
 
-                log.Warn("Requested site not present in the server "  , site_name)
-                nw.WriteString("ERR! Site not found\n")
-			    nw.Flush()
-            }
+					log.Warn("Requested site not present in the server ", site_name)
+					nw.WriteString("ERR! Site not found\n")
+				}
+				//	nw.Flush()
+			} else {
 
-            log.Warn("No site name provided")
-            nw.WriteString("Please provide a site name\n")
-            nw.Flush()
-			
+				log.Warn("No site name provided")
+				nw.WriteString("Please provide a site name\n")
+			}
+            //site_conf,_ := lib.GetSiteConfig("./mangoman/site.ini")
+            //title,_ := site_conf.GetSiteTitle()
+            //log.Info("Site title =>")
+            //log.Info(title)
+			nw.Flush()
+
 		}
 		nw.WriteString("Unknown command\n")
 	}
@@ -71,9 +90,9 @@ func handleCon(c net.Conn) {
 
 func main() {
 	x := true
-    //cf := lib.OpenConfig("server.ini")
-    //fmt.Println(cf.CheckIfSiteExists("mangoman"))
-    //fmt.Println(cf.GetSitePath("mangoman"))
+	//cf := lib.OpenConfig("server.ini")
+	//fmt.Println(cf.CheckIfSiteExists("mangoman"))
+	//fmt.Println(cf.GetSitePath("mangoman"))
 
 	if x {
 		var PORT int = 2001
