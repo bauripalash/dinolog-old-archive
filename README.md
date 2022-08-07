@@ -4,7 +4,6 @@
 
 > Dinolog protocol is a simplified blogging protocol which can even be surfed with telnet or netcat
 
-
 ## Specification
 ### Request:
     
@@ -76,3 +75,5 @@ ENTRIES:
         SIZE
         TEXT
 ```
+
+**⚠️ Current dinolog server implementation does not follow specifications at all, it is just a very early stage prototype, I am just tinkering.**
