@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/bauripalash/dinolog/lib"
@@ -41,7 +40,7 @@ func handleCon(c net.Conn) {
 		}
 
 		if request[0] == "+out" {
-            log.Info("Client Quit Request : ", c.RemoteAddr().String())
+			log.Info("Client Quit Request : ", c.RemoteAddr().String())
 			break
 		}
 
@@ -53,17 +52,13 @@ func handleCon(c net.Conn) {
 				if cf.CheckIfSiteExists(site_name) {
 					//nw.Write([]byte(cf.GetSitePath(site_name) + "\n"))
 					//nw.Write([]byte(strconv.FormatBool(cf.SitePathExists(site_name)) + "\n"))
-                    site_conf,_ := lib.GetSiteConfig(cf , site_name)
-                    site_post_dir,noerr := site_conf.GetSiteContentDir()
-                    log.Warn("NoError => " + strconv.FormatBool(noerr))
-                    log.Info(site_post_dir) 
-                    if noerr{
-                        files,_ := os.ReadDir(site_post_dir)
-                            for _,file  := range files{
-                                nw.Write([]byte(file.Name() + "\n"))
-                            }
-                    }
+					site_conf, _ := lib.GetSiteConfig(cf, site_name)
+                    tempsite , _ := lib.GetSite(&site_conf)
                     
+                    tempsite.ReadPosts()
+                    
+                    nw.Write([]byte(tempsite.Title + "\n"))
+
 				} else {
 
 					log.Warn("Requested site not present in the server ", site_name)
@@ -75,10 +70,10 @@ func handleCon(c net.Conn) {
 				log.Warn("No site name provided")
 				nw.WriteString("Please provide a site name\n")
 			}
-            //site_conf,_ := lib.GetSiteConfig("./mangoman/site.ini")
-            //title,_ := site_conf.GetSiteTitle()
-            //log.Info("Site title =>")
-            //log.Info(title)
+			//site_conf,_ := lib.GetSiteConfig("./mangoman/site.ini")
+			//title,_ := site_conf.GetSiteTitle()
+			//log.Info("Site title =>")
+			//log.Info(title)
 			nw.Flush()
 
 		}
