@@ -55,9 +55,20 @@ func handleCon(c net.Conn) {
 					site_conf, _ := lib.GetSiteConfig(cf, site_name)
                     tempsite , _ := lib.GetSite(&site_conf)
                     
-                    tempsite.ReadPosts()
-                    
+                    posts := tempsite.ReadPosts()
+
+                                       
                     nw.Write([]byte(tempsite.Title + "\n"))
+                    
+                    nw.Write([]byte("~~~~~~~~\n\n=== POSTS ===\n\n"))
+
+                    for _,post := range posts{
+                        
+                        nw.Write([]byte(post.ToFmtString()))
+                        nw.Write([]byte("\n----------------\n"))
+                    }
+                    
+
 
 				} else {
 
