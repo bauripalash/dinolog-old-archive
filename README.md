@@ -15,7 +15,11 @@
 * MangoManServer> : As you wish...
 
 ```
-DD<SEPARATOR><UNAME><SEPARATOR>C<COMMAND>
+DD<SEPARATOR><UNAME><SEPARATOR>C<SEPARATOR><COMMAND>
+```
+
+```
+DD~S~mangoman~ALL
 ```
 
 Here is the list of available `COMMAND`s :
@@ -27,9 +31,9 @@ Here is the list of available `COMMAND`s :
 
 I know the URL/SLUG/ID of the entry:
 
-`DD<SEPARATOR><UNAME><SEPARATOR>X<SEPARATOR><ID>`
+`DD<SEPARATOR><UNAME><SEPARATOR>ID<SEPARATOR><ID>`
 
-`DD~mangoman~X~I-eat-mango`
+`DD~ID~mangoman~I-eat-mango`
 
 ### Response Header:
 

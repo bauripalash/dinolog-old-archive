@@ -45,6 +45,7 @@ func handleCon(c net.Conn) {
 		}
 
 		if request[0] == "+posts" {
+            lib.ReqDemo()
 			if len(request) == 2 {
 				site_name := request[1]
 				log.Info("REQ Site: ", site_name)
@@ -61,6 +62,7 @@ func handleCon(c net.Conn) {
                     nw.Write([]byte(tempsite.Title + "\n"))
                     
                     nw.Write([]byte("~~~~~~~~\n\n=== POSTS ===\n\n"))
+                    
 
                     for _,post := range posts{
                         
