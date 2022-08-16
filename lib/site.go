@@ -5,71 +5,109 @@ import (
 	"log"
 	"os"
 
-	"gopkg.in/ini.v1"
+	"github.com/pelletier/go-toml/v2"
 )
 
 type SiteConfig struct {
-	pathname     string
-	sitepath     string
-	configobject ini.File
+	site_title  string
+	sitepath    string
+	content_dir string
 }
 
-type Site struct{
-    cfg SiteConfig
-    Title string
-    Sitepath string
-    Contentdir string
+type SiteConf struct {
+	Site_name string
+	Config    map[string]interface{}
 }
 
+type Site struct {
+	cfg        SiteConfig
+	Title      string
+	Sitepath   string
+	Contentdir string
+}
 
+func ReadSiteConfig(filepath string) SiteConf {
 
-func GetSiteConfig(cfg Config, sitename string) (SiteConfig, error) {
-	site_config_file := cfg.GetSitePath(sitename) + "/site.ini"
-	//fmt.Println(sitename)
-	if doesConfigExist(site_config_file) {
-		raw_config := OpenConfig(site_config_file)
-		return SiteConfig{
-			pathname:     raw_config.pathname,
-			configobject: raw_config.configobject,
-			sitepath:     cfg.GetSitePath(sitename),
-		}, nil
-	} else {
-		return SiteConfig{}, fmt.Errorf("Config file %s cannot be found!", site_config_file)
+	var cfg SiteConf
+
+	raw_conf, err := os.ReadFile(filepath)
+	if err != nil {
+		log.Fatalf("Error Occured while opening config file %s", filepath)
 	}
+
+	toml.Unmarshal(raw_conf, &cfg)
+
+	return cfg
+
 }
 
-func (c *SiteConfig) configHasContentDir() (string, bool) {
+func (s *SiteConf) GetConfigValue(target string) (string, bool) {
 
-	if c.configobject.HasSection("config") {
-		if c.configobject.Section("config").HasKey("content_dir") {
-			return c.configobject.Section("config").Key("content_dir").Value(), true
-		}
+	target_value, ok := s.Config[target]
+
+	if ok {
+		return target_value.(string), true
 	}
+
 	return "", false
 
 }
 
-func (c *SiteConfig) getContentDir() (string, bool) {
+func (s *SiteConf) GetContentDir() (string, bool) {
 
-	content_dir, found := c.configHasContentDir()
+	return s.GetConfigValue("content_dir")
 
-	if found {
-		return content_dir, true
-	} else {
-		log.Fatalf(fmt.Sprint("Site config doesn't have content directory mentioned."))
-		return "", false
+}
+
+func (s *SiteConf) GetSiteTitle() string {
+
+	return s.Site_name
+
+}
+
+func (s *ServerConfig) GetSiteConf(sitename string) (SiteConfig, bool) {
+
+	site_path, _ := s.GetSitePath(sitename)
+	site_conf_file_path := site_path + "/site.toml"
+
+	if doesConfigExist(site_conf_file_path) {
+		conf_data := ReadSiteConfig(site_conf_file_path)
+		fmt.Println(conf_data)
+		content_dir, noerr_content_dir := conf_data.GetContentDir()
+		site_title := conf_data.GetSiteTitle()
+
+		if !noerr_content_dir {
+			log.Fatalln("Content_Dir or Site_Title has errors")
+			return SiteConfig{}, false
+		}
+
+		return SiteConfig{
+			sitepath:    site_path,
+			content_dir: content_dir,
+			site_title:  site_title,
+		}, true
+	}
+
+	log.Fatalln("Config Doesnot exists")
+	return SiteConfig{}, false
+
+}
+
+func (sc *SiteConfig) GetSite() Site {
+
+	return Site{
+		Sitepath:   sc.sitepath,
+		Title:      sc.site_title,
+		Contentdir: sc.content_dir,
+		cfg:        *sc,
 	}
 
 }
 
-func (c *SiteConfig) GetSiteContentDir() (string, bool) {
-	c_dir, nofail := c.getContentDir()
-	//fmt.Println(nofail)
-	if !nofail {
-		return "", false
-	}
+func (c *Site) GetContentDir() (string, bool) {
+	c_dir := c.cfg.content_dir
 
-	content_dir := c.sitepath + "/" + c_dir
+	content_dir := c.cfg.sitepath + "/" + c_dir
 	_, err := os.Stat(content_dir)
 
 	//fmt.Println(err)
@@ -77,38 +115,4 @@ func (c *SiteConfig) GetSiteContentDir() (string, bool) {
 		return "", false
 	}
 	return content_dir, true
-}
-
-func (c *SiteConfig) GetSiteTitle() (string, bool) {
-	//fmt.Println(c.configobject)
-	if c.configobject.Section("").HasKey("site_name") {
-		return c.configobject.Section("").Key("site_name").Value(), true
-	}
-	return "", false
-
-}
-
-func GetSite(c *SiteConfig) (Site , bool){
-    site_title, noerr := c.GetSiteTitle() 
-        
-    if !noerr{
-        return Site{},false
-    }
-
-    content_dir,noerr := c.GetSiteContentDir()
-
-    if !noerr{
-        return Site{},false
-    }
-    
-
-    
-    return Site{
-        Title: site_title,
-        Contentdir: content_dir,
-        Sitepath: c.sitepath,
-        cfg: *c,
-    },true
-
-
 }

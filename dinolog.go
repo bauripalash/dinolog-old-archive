@@ -17,7 +17,8 @@ func init() {
 }
 
 func handleCon(c net.Conn) {
-	cf := lib.OpenConfig("server.ini")
+	//cf := lib.OpenConfig("server.ini")
+	cf := lib.OpenServerConfig("server.toml")
 	fmt.Printf("hello from %s\n", c.RemoteAddr().String())
 
 	for {
@@ -45,7 +46,7 @@ func handleCon(c net.Conn) {
 		}
 
 		if request[0] == "+posts" {
-            lib.ReqDemo()
+			lib.ReqDemo()
 			if len(request) == 2 {
 				site_name := request[1]
 				log.Info("REQ Site: ", site_name)
@@ -53,24 +54,22 @@ func handleCon(c net.Conn) {
 				if cf.CheckIfSiteExists(site_name) {
 					//nw.Write([]byte(cf.GetSitePath(site_name) + "\n"))
 					//nw.Write([]byte(strconv.FormatBool(cf.SitePathExists(site_name)) + "\n"))
-					site_conf, _ := lib.GetSiteConfig(cf, site_name)
-                    tempsite , _ := lib.GetSite(&site_conf)
-                    
-                    posts := tempsite.ReadPosts()
+					site_config, noerr := cf.GetSiteConf(site_name)
 
-                                       
-                    nw.Write([]byte(tempsite.Title + "\n"))
-                    
-                    nw.Write([]byte("~~~~~~~~\n\n=== POSTS ===\n\n"))
-                    
+					fmt.Println(site_config, noerr)
+					tempsite := site_config.GetSite()
 
-                    for _,post := range posts{
-                        
-                        nw.Write([]byte(post.ToFmtString()))
-                        nw.Write([]byte("\n----------------\n"))
-                    }
-                    
+					posts := tempsite.ReadPosts()
 
+					nw.Write([]byte(tempsite.Title + "\n"))
+
+					nw.Write([]byte("~~~~~~~~\n\n=== POSTS ===\n\n"))
+
+					for _, post := range posts {
+
+						nw.Write([]byte(post.ToFmtString()))
+						nw.Write([]byte("\n----------------\n"))
+					}
 
 				} else {
 
@@ -98,9 +97,6 @@ func handleCon(c net.Conn) {
 
 func main() {
 	x := true
-	//cf := lib.OpenConfig("server.ini")
-	//fmt.Println(cf.CheckIfSiteExists("mangoman"))
-	//fmt.Println(cf.GetSitePath("mangoman"))
 
 	if x {
 		var PORT int = 2001

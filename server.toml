@@ -1,0 +1,6 @@
+server_name = "MangoServer"
+enabled_sites = ["mangoman"]
+
+[[siteconfig]]
+name = "mangoman"
+root = "./mangoman"
