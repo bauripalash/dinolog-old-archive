@@ -19,7 +19,7 @@ DD<SEPARATOR><UNAME><SEPARATOR>C<SEPARATOR><COMMAND>
 ```
 
 ```
-DD~S~mangoman~ALL
+DD~ST~mangoman~ALL
 ```
 
 Here is the list of available `COMMAND`s :

@@ -33,12 +33,17 @@ func handleCon(c net.Conn) {
 
 		}
 		tmp := strings.TrimSpace(string(rawData))
+		rawRequest := strings.TrimSpace(tmp)
 		request := strings.Split(tmp, " ")
-		//log.New
 
 		if err != nil {
 			fmt.Println(err)
 		}
+
+		//println(rawRequest)
+		log.Info(rawRequest)
+		nw.Write([]byte(lib.ParseRequest(rawRequest, cf)))
+		nw.Flush()
 
 		if request[0] == "+out" {
 			log.Info("Client Quit Request : ", c.RemoteAddr().String())
@@ -50,25 +55,23 @@ func handleCon(c net.Conn) {
 			if len(request) == 2 {
 				site_name := request[1]
 				log.Info("REQ Site: ", site_name)
-				//log.Info("Dummy example")
 				if cf.CheckIfSiteExists(site_name) {
-					//nw.Write([]byte(cf.GetSitePath(site_name) + "\n"))
-					//nw.Write([]byte(strconv.FormatBool(cf.SitePathExists(site_name)) + "\n"))
 					site_config, noerr := cf.GetSiteConf(site_name)
 
 					fmt.Println(site_config, noerr)
 					tempsite := site_config.GetSite()
 
 					posts := tempsite.ReadPosts()
+					fmt.Println(len(posts))
 
 					nw.Write([]byte(tempsite.Title + "\n"))
 
-					nw.Write([]byte("~~~~~~~~\n\n=== POSTS ===\n\n"))
+					//nw.Write([]byte("~~~~~~~~\n\n=== POSTS ===\n\n"))
 
 					for _, post := range posts {
 
 						nw.Write([]byte(post.ToFmtString()))
-						nw.Write([]byte("\n----------------\n"))
+						//nw.Write([]byte("\n----------------\n"))
 					}
 
 				} else {

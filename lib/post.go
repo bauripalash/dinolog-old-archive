@@ -3,23 +3,34 @@ package lib
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"time"
+
+	"github.com/pelletier/go-toml/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 type SitePost struct {
 	Uid     string
 	Title   string
 	Summary string
+	Date    time.Time
+}
+
+type SitePostMeta struct {
+	Title string
+	Date  string
 }
 
 const summaryMaxLen = 150
 const titleMaxLen = 50
+const ISODate = "2006-01-02T15:04:05-0700"
 
 func (s *SitePost) ToFmtString() string {
-	output := fmt.Sprintf("--> %s <--\n= %s =\n\n%s\n\n", s.Uid, s.Title, s.Summary)
+	output := fmt.Sprintf("%s\n%s\n%s\n\n", s.Uid, s.Title, s.Summary)
 	return output
 }
 
@@ -38,8 +49,7 @@ func makePost(fpath string, uid string) SitePost {
 	}
 
 	temp_summary := ""
-	temp_title := ""
-	got_title := false
+	temp_meta := ""
 
 	f, err := os.Open(fpath)
 	if err != nil {
@@ -48,17 +58,33 @@ func makePost(fpath string, uid string) SitePost {
 
 	defer f.Close()
 
+	inside_meta := false
+
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
-		if isTitle(scanner.Text()) {
-			temp_title = strings.TrimPrefix(scanner.Text(), "# ")
-			got_title = true
-			continue
-		}
+		if !inside_meta {
 
-		if got_title {
-			temp_summary += scanner.Text()
+			if scanner.Text() == "++++" {
+
+				inside_meta = true
+				continue
+			}
+
+			if len(scanner.Text()) > 2 && len(temp_summary) < summaryMaxLen {
+				temp_summary = scanner.Text()
+
+			}
+
+		} else if inside_meta {
+
+			if scanner.Text() == "++++" {
+				inside_meta = false
+				continue
+			}
+
+			temp_meta += scanner.Text() + "\n"
+
 		}
 
 	}
@@ -67,16 +93,33 @@ func makePost(fpath string, uid string) SitePost {
 		log.Fatal(err)
 	}
 
-	if len(temp_title) > titleMaxLen {
-		temp_title = temp_title[:titleMaxLen] + "..."
+	var metaData SitePostMeta
+
+	toml.Unmarshal([]byte(temp_meta), &metaData)
+
+	if len(metaData.Title) > 1 {
+		output_post.Title = metaData.Title
 	}
 
-	if len(temp_summary) > summaryMaxLen {
-		temp_summary = temp_summary[:summaryMaxLen] + "..."
+	if len(metaData.Date) > 1 {
+
+		datetime, err := time.Parse(ISODate, metaData.Date)
+
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+
+		//log.Warn(datetime.Format("January 02, 2006"))
+		output_post.Date = datetime
+		output_post.Title += " / " + datetime.Format("January 02, 2006")
+
 	}
 
-	output_post.Title = temp_title
+	//logrus.Info(temp_meta)
+	//logrus.Warn("Post Title -> " , metaData.Title)
 	output_post.Summary = temp_summary
+
+	//output_post.MetaData = metaData
 
 	return output_post
 
@@ -97,6 +140,11 @@ func (s *Site) ReadPosts() []SitePost {
 		posts = append(posts, makePost(filepath.Join(cdir_path, file.Name()), file.Name()))
 
 	}
+	sort.SliceStable(posts, func(i, j int) bool {
+
+		return posts[i].Date.After(posts[j].Date) // Latest First
+
+	})
 
 	return posts
 
