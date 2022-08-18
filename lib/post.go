@@ -17,12 +17,14 @@ type SitePost struct {
 	Uid     string
 	Title   string
 	Summary string
+	Tags    []string
 	Date    time.Time
 }
 
 type SitePostMeta struct {
 	Title string
 	Date  string
+	Tags  []string
 }
 
 const summaryMaxLen = 150
@@ -113,6 +115,10 @@ func makePost(fpath string, uid string) SitePost {
 		output_post.Date = datetime
 		output_post.Title += " / " + datetime.Format("January 02, 2006")
 
+	}
+
+	if len(metaData.Tags) > 0 {
+		output_post.Tags = metaData.Tags
 	}
 
 	//logrus.Info(temp_meta)

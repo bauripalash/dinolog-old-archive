@@ -2,6 +2,7 @@
 
 title = "A Post"
 date = "2022-08-17T12:44:57+0000"
+tags = ["hello","new"]
 
 ++++
 

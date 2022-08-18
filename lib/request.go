@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -53,7 +54,7 @@ func handleSingleSite(rawcmds []string) Request {
 
 func parseDD(rawcmds []string, cfg ServerConfig) string {
 	output := ""
-	log.Info("parseDD -> %s", rawcmds)
+	//log.Info("parseDD -> %s", rawcmds)
 	if rawcmds[0] == "ST" || rawcmds[0] == "st" {
 		req := handleSingleSite(rawcmds[1:])
 
@@ -67,11 +68,24 @@ func parseDD(rawcmds []string, cfg ServerConfig) string {
 			site = siteconf.GetSite()
 		}
 
+		posts := site.ReadPosts()
+		limit := len(posts)
+
+		if req.Filter.ListFilter != "D" {
+			_, err := strconv.Atoi(req.Filter.Extra)
+			if err != nil {
+				log.Warn("Failed to pass argument as integer")
+				limit = len(posts)
+				//return ""
+			}
+
+		}
+
 		switch filter := req.Filter.ListFilter; filter {
 
 		case "A":
 
-			posts := site.ReadPosts()
+			//posts := site.ReadPosts()
 			for _, post := range posts {
 
 				output += post.ToFmtString()
@@ -81,13 +95,6 @@ func parseDD(rawcmds []string, cfg ServerConfig) string {
 		case "O":
 
 			//fmt.Println(">>>>>> ",req.Filter.Extra , " <<<<<<<<<")
-
-			limit, err := strconv.Atoi(req.Filter.Extra)
-			posts := site.ReadPosts()
-
-			if err != nil {
-				return ""
-			}
 
 			if limit >= len(posts) {
 				limit = len(posts)
@@ -101,6 +108,33 @@ func parseDD(rawcmds []string, cfg ServerConfig) string {
 
 			for _, post := range posts[:limit] {
 				output += post.ToFmtString()
+			}
+
+		case "L":
+			for _, post := range posts[:limit] {
+				output += post.ToFmtString()
+			}
+
+		case "D":
+			arg_date, _ := time.Parse("2006-01-02", req.Filter.Extra)
+			for _, post := range posts[:limit] {
+				if post.Date.Format("2006-01-02") == arg_date.Format("2006-01-02") {
+					output += post.ToFmtString()
+				}
+
+			}
+
+		case "T":
+			tags := strings.Split(req.Filter.Extra, ",")
+
+			for _, post := range posts {
+				for _, t := range tags {
+					for _, pt := range post.Tags {
+						if t == pt {
+							output += post.ToFmtString()
+						}
+					}
+				}
 			}
 
 		}
