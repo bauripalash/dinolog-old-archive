@@ -17,9 +17,8 @@ func init() {
 }
 
 func handleCon(c net.Conn) {
-	//cf := lib.OpenConfig("server.ini")
 	cf := lib.OpenServerConfig("server.toml")
-	fmt.Printf("hello from %s\n", c.RemoteAddr().String())
+	log.Info(fmt.Sprintf("NEW CLIENT : %s", c.RemoteAddr().String()))
 
 	for {
 
@@ -34,63 +33,18 @@ func handleCon(c net.Conn) {
 		}
 		tmp := strings.TrimSpace(string(rawData))
 		rawRequest := strings.TrimSpace(tmp)
-		request := strings.Split(tmp, " ")
 
 		if err != nil {
 			fmt.Println(err)
 		}
 
-		//println(rawRequest)
-		log.Info(rawRequest)
+		log.Info(fmt.Sprintf("REQUEST : %s", rawRequest))
 		nw.Write([]byte(lib.ParseRequest(rawRequest, cf)))
 		nw.Flush()
 
-		if request[0] == "+out" {
-			log.Info("Client Quit Request : ", c.RemoteAddr().String())
+		if rawRequest == "00" { //Not related to any spec; just for convenience
+			log.Info("CLIENT QUIT : ", c.RemoteAddr().String())
 			break
-		}
-
-		if request[0] == "+posts" {
-			lib.ReqDemo()
-			if len(request) == 2 {
-				site_name := request[1]
-				log.Info("REQ Site: ", site_name)
-				if cf.CheckIfSiteExists(site_name) {
-					site_config, noerr := cf.GetSiteConf(site_name)
-
-					fmt.Println(site_config, noerr)
-					tempsite := site_config.GetSite()
-
-					posts := tempsite.ReadPosts()
-					fmt.Println(len(posts))
-
-					nw.Write([]byte(tempsite.Title + "\n"))
-
-					//nw.Write([]byte("~~~~~~~~\n\n=== POSTS ===\n\n"))
-
-					for _, post := range posts {
-
-						nw.Write([]byte(post.ToFmtString()))
-						//nw.Write([]byte("\n----------------\n"))
-					}
-
-				} else {
-
-					log.Warn("Requested site not present in the server ", site_name)
-					nw.WriteString("ERR! Site not found\n")
-				}
-				//	nw.Flush()
-			} else {
-
-				log.Warn("No site name provided")
-				nw.WriteString("Please provide a site name\n")
-			}
-			//site_conf,_ := lib.GetSiteConfig("./mangoman/site.ini")
-			//title,_ := site_conf.GetSiteTitle()
-			//log.Info("Site title =>")
-			//log.Info(title)
-			nw.Flush()
-
 		}
 		nw.WriteString("Unknown command\n")
 	}

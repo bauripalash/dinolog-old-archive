@@ -88,3 +88,33 @@ func (s *ServerConfig) SitePathExists(sitename string) bool {
 
 	return true
 }
+
+/*
+func (s *ServerConfig) GetCachePath() string{
+
+        return s.Cache_dir 
+}
+
+func (s *ServerConfig) CacheDirExists() bool{
+    cd , err := os.Stat(s.GetCachePath())
+    
+    if cd.IsDir() && !os.IsNotExist(err){
+        return true
+    }
+
+    return false
+    
+}
+
+func (s *ServerConfig) IsSiteCached(sitename string){
+    site_cache_path := s.GetCachePath() + "/" + sitename
+
+    d,err := os.Stat(site_cache_path)
+
+    if d.IsDir() && !os.IsNotExist(err){
+        return true
+    }
+    return false
+}
+
+*/

@@ -19,6 +19,7 @@ type SitePost struct {
 	Summary string
 	Tags    []string
 	Date    time.Time
+    Path string
 }
 
 type SitePostMeta struct {
@@ -27,9 +28,14 @@ type SitePostMeta struct {
 	Tags  []string
 }
 
-const summaryMaxLen = 150
-const titleMaxLen = 50
-const ISODate = "2006-01-02T15:04:05-0700"
+type SinglePost struct {
+    Metadata SitePost
+    Text string
+}
+
+const SUMMARY_MAX_LEN = 150
+const TITLE_MAX_LEN = 50
+const ISO_DATE = "2006-01-02T15:04:05-0700"
 
 func (s *SitePost) ToFmtString() string {
 	output := fmt.Sprintf("%s\n%s\n%s\n\n", s.Uid, s.Title, s.Summary)
@@ -73,7 +79,7 @@ func makePost(fpath string, uid string) SitePost {
 				continue
 			}
 
-			if len(scanner.Text()) > 2 && len(temp_summary) < summaryMaxLen {
+			if len(scanner.Text()) > 2 && len(temp_summary) < SUMMARY_MAX_LEN {
 				temp_summary = scanner.Text()
 
 			}
@@ -105,7 +111,7 @@ func makePost(fpath string, uid string) SitePost {
 
 	if len(metaData.Date) > 1 {
 
-		datetime, err := time.Parse(ISODate, metaData.Date)
+		datetime, err := time.Parse(ISO_DATE, metaData.Date)
 
 		if err != nil {
 			log.Fatalf(err.Error())
@@ -113,7 +119,7 @@ func makePost(fpath string, uid string) SitePost {
 
 		//log.Warn(datetime.Format("January 02, 2006"))
 		output_post.Date = datetime
-		output_post.Title += " / " + datetime.Format("January 02, 2006")
+		//output_post.Title += " / " + datetime.Format("January 02, 2006")
 
 	}
 
@@ -154,4 +160,46 @@ func (s *Site) ReadPosts() []SitePost {
 
 	return posts
 
+}
+
+func (s *Site) GetSinglePost(post SitePost) SinglePost{
+    
+    fulltext := ""
+    
+    cdir,_ := s.GetContentDir()
+    f, err := os.Open( cdir + "/" + post.Uid)
+	if err != nil {
+		log.Fatalf("Failed to read file post")
+	}
+
+	defer f.Close()
+
+
+	scanner := bufio.NewScanner(f)
+    inside_meta := false
+	for scanner.Scan() {
+        
+        if !inside_meta{
+            if scanner.Text() == "++++"{
+                inside_meta = true
+                continue
+            }
+            
+            fulltext += scanner.Text() + "\n"
+
+        }else{
+            if scanner.Text() == "++++"{
+
+                inside_meta = false
+                continue
+            }
+        }
+        
+    }
+
+    return SinglePost{
+        Metadata: post,
+        Text: fulltext,
+    }
+    
 }

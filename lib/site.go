@@ -2,9 +2,8 @@ package lib
 
 import (
 	"fmt"
-	"log"
 	"os"
-
+    log "github.com/sirupsen/logrus"
 	"github.com/pelletier/go-toml/v2"
 )
 

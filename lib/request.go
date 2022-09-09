@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -21,11 +22,12 @@ type Request struct {
 	Filter   PostFilter
 }
 
-const sp = "~"
+const SEPARATOR = "~" //Request separator
+const DATEFMT = "2006-01-02"
 
 func splitSep(s string) []string {
 
-	return strings.Split(s, sp)
+	return strings.Split(s, SEPARATOR)
 }
 
 func handleSingleSite(rawcmds []string) Request {
@@ -52,9 +54,9 @@ func handleSingleSite(rawcmds []string) Request {
 	return Request{}
 }
 
-func parseDD(rawcmds []string, cfg ServerConfig) string {
+func parseDD(rawcmds []string, cfg ServerConfig) (string,uint) {
 	output := ""
-	//log.Info("parseDD -> %s", rawcmds)
+    output_post_len := 0
 	if rawcmds[0] == "ST" || rawcmds[0] == "st" {
 		req := handleSingleSite(rawcmds[1:])
 
@@ -91,6 +93,7 @@ func parseDD(rawcmds []string, cfg ServerConfig) string {
 				output += post.ToFmtString()
 
 			}
+            output_post_len = len(posts)
 
 		case "O":
 
@@ -107,18 +110,26 @@ func parseDD(rawcmds []string, cfg ServerConfig) string {
 			})
 
 			for _, post := range posts[:limit] {
+                output_post_len += 1
 				output += post.ToFmtString()
 			}
+
+            //output_post_len = len(posts[:limit])
 
 		case "L":
 			for _, post := range posts[:limit] {
-				output += post.ToFmtString()
+				output_post_len += 1 
+                output += post.ToFmtString()
+                
 			}
 
+           // output_post_len = len(posts[:limit])
+
 		case "D":
-			arg_date, _ := time.Parse("2006-01-02", req.Filter.Extra)
+			arg_date, _ := time.Parse(DATEFMT, req.Filter.Extra)
 			for _, post := range posts[:limit] {
-				if post.Date.Format("2006-01-02") == arg_date.Format("2006-01-02") {
+				if post.Date.Format(DATEFMT) == arg_date.Format(DATEFMT) {
+                    output_post_len += 1
 					output += post.ToFmtString()
 				}
 
@@ -131,6 +142,7 @@ func parseDD(rawcmds []string, cfg ServerConfig) string {
 				for _, t := range tags {
 					for _, pt := range post.Tags {
 						if t == pt {
+                            output_post_len += 1
 							output += post.ToFmtString()
 						}
 					}
@@ -140,27 +152,64 @@ func parseDD(rawcmds []string, cfg ServerConfig) string {
 		}
 
 	} else if rawcmds[0] == "ID" || rawcmds[0] == "id" {
-		println("Hey, I know the slug/id of the item")
-	}
+        site_name := rawcmds[1]
+        post_id := rawcmds[2]
+        
+        //site_path,_ := cfg.GetSitePath(site_name)
+       // post_path := site_path + post_id
 
-	return output
+    	var siteconf SiteConfig
+		var site Site
+
+
+    	if cfg.CheckIfSiteExists(site_name) {
+			siteconf, _ = cfg.GetSiteConf(site_name)
+
+			site = siteconf.GetSite()
+		}
+        
+        all_posts := site.ReadPosts()
+
+        for _, post := range all_posts{
+            
+            if post.Uid == post_id{
+                output = site.GetSinglePost(post).Text
+                output_post_len = 1
+            }
+        }
+
+        
+        
+
+       // all_posts := 
+
+
+	}
+    //println(output_post_len)
+	return output,uint(output_post_len)
 
 }
 
 func ParseRequest(rawreq string, cfg ServerConfig) string {
 	output := ""
+    statuscode := 0
+    number_of_posts := uint(0)
 	reqToken := splitSep(rawreq)
 
 	if reqToken[0] == "dd" || reqToken[0] == "DD" {
 
-		output = parseDD(reqToken[1:], cfg)
+		output,number_of_posts = parseDD(reqToken[1:], cfg)
 
 	}
+    
+    if len(output) > 1{
+        statuscode = 1
+    }
+    // DD ~ STATUSCODE ~ SIZE ~ NUMBER OF POSTS
+    response := fmt.Sprintf("D~%d~%d~%d\r\n%s" , statuscode , len(output) , number_of_posts , output)
 
-	return output
+    //println(len(output))
+	return response
 
 }
 
-func ReqDemo() {
-	//	print("dd~s~mangoman~all")
-}
