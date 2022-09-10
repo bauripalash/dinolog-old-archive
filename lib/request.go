@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -20,6 +19,14 @@ type PostFilter struct {
 type Request struct {
 	Sitename string
 	Filter   PostFilter
+}
+
+type Response struct{
+    Status uint
+    Size uint
+    NumPost uint //Number of posts
+    Data string
+
 }
 
 const SEPARATOR = "~" //Request separator
@@ -190,7 +197,7 @@ func parseDD(rawcmds []string, cfg ServerConfig) (string,uint) {
 
 }
 
-func ParseRequest(rawreq string, cfg ServerConfig) string {
+func ParseRequest(rawreq string, cfg ServerConfig) Response {
 	output := ""
     statuscode := 0
     number_of_posts := uint(0)
@@ -205,11 +212,16 @@ func ParseRequest(rawreq string, cfg ServerConfig) string {
     if len(output) > 1{
         statuscode = 1
     }
-    // DD ~ STATUSCODE ~ SIZE ~ NUMBER OF POSTS
-    response := fmt.Sprintf("D~%d~%d~%d\r\n%s" , statuscode , len(output) , number_of_posts , output)
+    // DD ~ STATUSCODE ~ SIZE ~ NUMBER OF POSTS ~ X ~ NUMBER OF OPTIONS
+    //response := fmt.Sprintf("D~%d~%d~%d\r\n%s" , statuscode , len(output) , number_of_posts , output)
 
     //println(len(output))
-	return response
+	return Response{
+        Status: uint(statuscode),
+        NumPost: number_of_posts,
+        Size: uint(len(output)),
+        Data: output,
+    }
 
 }
 

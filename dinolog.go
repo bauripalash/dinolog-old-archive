@@ -39,7 +39,9 @@ func handleCon(c net.Conn) {
 		}
 
 		log.Info(fmt.Sprintf("REQUEST : %s", rawRequest))
-		nw.Write([]byte(lib.ParseRequest(rawRequest, cf)))
+        raw_res := lib.ParseRequest(rawRequest, cf)
+        res := lib.NewResponse(raw_res, true)
+        nw.Write(res)
 		nw.Flush()
 
 		if rawRequest == "00" { //Not related to any spec; just for convenience
