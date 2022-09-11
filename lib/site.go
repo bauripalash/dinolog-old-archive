@@ -2,9 +2,9 @@ package lib
 
 import (
 	"fmt"
-	"os"
-    log "github.com/sirupsen/logrus"
 	"github.com/pelletier/go-toml/v2"
+	log "github.com/sirupsen/logrus"
+	"os"
 )
 
 type SiteConfig struct {

@@ -19,7 +19,7 @@ type SitePost struct {
 	Summary string
 	Tags    []string
 	Date    time.Time
-    Path string
+	Path    string
 }
 
 type SitePostMeta struct {
@@ -29,8 +29,8 @@ type SitePostMeta struct {
 }
 
 type SinglePost struct {
-    Metadata SitePost
-    Text string
+	Metadata SitePost
+	Text     string
 }
 
 const SUMMARY_MAX_LEN = 150
@@ -162,44 +162,43 @@ func (s *Site) ReadPosts() []SitePost {
 
 }
 
-func (s *Site) GetSinglePost(post SitePost) SinglePost{
-    
-    fulltext := ""
-    
-    cdir,_ := s.GetContentDir()
-    f, err := os.Open( cdir + "/" + post.Uid)
+func (s *Site) GetSinglePost(post SitePost) SinglePost {
+
+	fulltext := ""
+
+	cdir, _ := s.GetContentDir()
+	f, err := os.Open(cdir + "/" + post.Uid)
 	if err != nil {
 		log.Fatalf("Failed to read file post")
 	}
 
 	defer f.Close()
 
-
 	scanner := bufio.NewScanner(f)
-    inside_meta := false
+	inside_meta := false
 	for scanner.Scan() {
-        
-        if !inside_meta{
-            if scanner.Text() == "++++"{
-                inside_meta = true
-                continue
-            }
-            
-            fulltext += scanner.Text() + "\n"
 
-        }else{
-            if scanner.Text() == "++++"{
+		if !inside_meta {
+			if scanner.Text() == "++++" {
+				inside_meta = true
+				continue
+			}
 
-                inside_meta = false
-                continue
-            }
-        }
-        
-    }
+			fulltext += scanner.Text() + "\n"
 
-    return SinglePost{
-        Metadata: post,
-        Text: fulltext,
-    }
-    
+		} else {
+			if scanner.Text() == "++++" {
+
+				inside_meta = false
+				continue
+			}
+		}
+
+	}
+
+	return SinglePost{
+		Metadata: post,
+		Text:     fulltext,
+	}
+
 }
