@@ -38,7 +38,7 @@ const TITLE_MAX_LEN = 50
 const ISO_DATE = "2006-01-02T15:04:05-0700"
 
 func (s *SitePost) ToFmtString() string {
-	output := fmt.Sprintf("%s\n%s\n%s\n\n", s.Uid, s.Title, s.Summary)
+	output := fmt.Sprintf("%s\r\n%s\r\n%s\r\n%s\r\n\n", s.Uid, s.Title, s.Date.Format(DATEFMT) , s.Summary)
 	return output
 }
 

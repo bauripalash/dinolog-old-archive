@@ -12,13 +12,19 @@ import (
 )
 
 func init() {
-	log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.DebugLevel)
+    log.SetFormatter(&log.TextFormatter{
+        PadLevelText: true,
+        FullTimestamp: true,
+
+    })
+    
 	log.SetOutput(os.Stdout)
 }
 
 func handleCon(c net.Conn) {
 	cf := lib.OpenServerConfig("server.toml")
-	log.Info(fmt.Sprintf("NEW CLIENT : %s", c.RemoteAddr().String()))
+    log.Info("NEW CLIENT : " , c.RemoteAddr().String())
 
 	for {
 
@@ -27,27 +33,28 @@ func handleCon(c net.Conn) {
 
 		if err != nil {
 
-			fmt.Println(err)
+			//fmt.Println(err)
+            log.Fatal("Failed to read from Network buffer with err => " , err)
 			return
 
 		}
 		tmp := strings.TrimSpace(string(rawData))
 		rawRequest := strings.TrimSpace(tmp)
 
-		if err != nil {
-			fmt.Println(err)
-		}
 
-		log.Info(fmt.Sprintf("REQUEST : %s", rawRequest))
+        log.Info("NEW REQ : " , rawRequest)
+
 		raw_res := lib.ParseRequest(rawRequest, cf)
-		res := lib.NewResponse(raw_res, false)
-		nw.Write(res)
+		res := lib.NewResponse(raw_res)
+		
+        nw.Write(res)
 		nw.Flush()
 
-		if rawRequest == "00" { //Not related to any spec; just for convenience
+		if rawRequest == "+0" { //Not related to any spec; just for convenience
 			log.Info("CLIENT QUIT : ", c.RemoteAddr().String())
 			break
 		}
+        log.Debug("NEW UNKNOWN CMD: " , rawRequest)
 		nw.WriteString("Unknown command\n")
 	}
 	c.Close()
@@ -61,7 +68,7 @@ func main() {
 		var PORT int = 2001
 		var ADDRESS string = fmt.Sprintf("127.0.0.1:%d", PORT)
 		l, err := net.Listen("tcp4", ADDRESS)
-		fmt.Println("Starting server on 127.0.0.1:2001")
+		log.Info("SERVER LIVE " , ADDRESS)
 		if err != nil {
 			fmt.Println(err)
 			return

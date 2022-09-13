@@ -47,6 +47,7 @@ func handleSingleSite(rawcmds []string) (Request, bool) {
 	if len(rawcmds) >= 2 {
 		sitename := rawcmds[0]
 		command := rawcmds[1]
+        log.Info("handleSingleSite-> " , sitename , "\n" , command)
 
 		if strings.HasPrefix(command, "L") || strings.HasPrefix(command, "l") {
 			return Request{Sitename: sitename, Filter: PostFilter{ListFilter: "L", Extra: command[1:]}}, true
@@ -74,6 +75,7 @@ func parseDD(rawcmds []string, cfg ServerConfig) (string, uint, bool) {
 	output_post_len := 0
 	if rawcmds[0] == "ST" || rawcmds[0] == "st" {
 		req, no_err := handleSingleSite(rawcmds[1:])
+        log.Info("parseDD -> ", req)
 
 		if !no_err {
 			return "err", uint(SC_MAL_REQ), false
@@ -95,7 +97,11 @@ func parseDD(rawcmds []string, cfg ServerConfig) (string, uint, bool) {
 		limit := len(posts)
 
 		if req.Filter.ListFilter != "D" {
-			_, err := strconv.Atoi(req.Filter.Extra)
+            log.Info("ATOI -> " , req.Filter.Extra)
+            temp_limit, err := strconv.Atoi(req.Filter.Extra)
+            
+            limit = temp_limit
+
 			if err != nil {
 				log.Warn("Failed to pass argument as integer")
 				limit = len(posts)
@@ -103,6 +109,8 @@ func parseDD(rawcmds []string, cfg ServerConfig) (string, uint, bool) {
 			}
 
 		}
+        
+        log.Debug("Post Limit -> " , limit)
 
 		switch filter := req.Filter.ListFilter; filter {
 
