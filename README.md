@@ -1,4 +1,6 @@
-# 🦕 Dinolog Protocol
+# This project is dead. Check out the new successor here at <https://github.com/bauripalash/dinolog>
+
+🦕 Dinolog Protocol
 
 ### Utterly simplified and lightweight blogging protocol
 
